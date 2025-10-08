@@ -1,0 +1,30 @@
+.profile-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-card,
+.watched-list-card {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-field {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+mat-list-item {
+  margin-bottom: 10px;
+}
+
+mat-list-item span[matListItemTitle] {
+  font-weight: 500;
+}
+
+mat-list-item span[matListItemLine] {
+  color: rgba(0, 0, 0, 0.54);
+}

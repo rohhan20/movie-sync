@@ -32,4 +32,22 @@
       </mat-list>
     </mat-card-content>
   </mat-card>
+
+  <mat-card class="recommendations-card" *ngIf="(recommendations$ | async)?.length">
+    <mat-card-header>
+      <mat-card-title>Personalized Recommendations</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-grid-list cols="3" rowHeight="350px" gutterSize="16px">
+        <mat-grid-tile *ngFor="let movie of recommendations$ | async">
+          <mat-card class="movie-card">
+            <img mat-card-image [src]="movie.posterUrl" [alt]="movie.title">
+            <mat-card-content>
+              <mat-card-title>{{ movie.title }}</mat-card-title>
+            </mat-card-content>
+          </mat-card>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </mat-card-content>
+  </mat-card>
 </div>

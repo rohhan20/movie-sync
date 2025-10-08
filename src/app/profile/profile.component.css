@@ -6,10 +6,27 @@
 }
 
 .profile-card,
-.watched-list-card {
+.watched-list-card,
+.recommendations-card {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+}
+
+.recommendations-card .movie-card {
+  width: 100%;
+  text-align: center;
+}
+
+.recommendations-card .movie-card img {
+  height: 250px;
+  object-fit: cover;
+}
+
+.recommendations-card .movie-card mat-card-title {
+  font-size: 1em;
+  padding: 10px;
+  line-height: 1.2;
 }
 
 .search-field {

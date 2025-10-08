@@ -34,7 +34,12 @@ export class MovieService {
   }
 
   getRecommendations(userIds: string[]): Observable<Movie[]> {
-    // In a real app, this would be complex logic. Here, we'll just return some movies.
+    // If userIds are provided (e.g., for personalized recommendations), return a different set of movies.
+    if (userIds && userIds.length > 0) {
+      // Simulate personalized recommendations by returning the latter half of the mock list.
+      return of(this.mockMovies.slice(3, 6));
+    }
+    // For group sessions, return the first half.
     return of(this.mockMovies.slice(0, 3));
   }
 }

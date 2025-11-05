@@ -1,38 +1,26 @@
- currentUser$ | async as currentUser
-<div class="home-container">
-  @if( currentUser$) {
-    <h2>Welcome back, {{ currentUser$.displayName}}!</h2>
-  } @else {
-    <h2>Welcome to MovieSync!</h2>
-    <p>Your go-to app for syncing movie nights with friends.</p>
-  }
-  <div class="actions-grid">
-    <mat-card class="action-card">
-      <mat-card-header>
-        <mat-card-title>Create a New Session</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Start a new session and invite your friends to decide on a movie together.</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-raised-button color="primary" (click)="createSession()">Create Session</button>
-      </mat-card-actions>
-    </mat-card>
+<div *ngIf="currentUser$ | async as user; else guestView">
+  <h1>Welcome, {{ user.displayName }}!</h1>
+  <p>Ready for a movie night? Create a new session or join an existing one.</p>
 
-    <mat-card class="action-card">
-      <mat-card-header>
-        <mat-card-title>Join an Existing Session</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>Enter the code from a friend's session to join in and add your watched movies.</p>
-        <mat-form-field appearance="fill">
-          <mat-label>Session Code</mat-label>
-          <input matInput [(ngModel)]="joinCode" (keyup.enter)="joinSession()" placeholder="Enter code">
-        </mat-form-field>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-raised-button color="accent" (click)="joinSession()" [disabled]="!joinCode.trim()">Join Session</button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
+  <mat-card>
+    <mat-card-content>
+      <button mat-raised-button color="primary" (click)="createSession()">Create Session</button>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-content>
+      <mat-form-field>
+        <input matInput [(ngModel)]="joinCode" placeholder="Enter session code">
+      </mat-form-field>
+      <button mat-raised-button (click)="joinSession()">Join Session</button>
+    </mat-card-content>
+  </mat-card>
 </div>
+
+<ng-template #guestView>
+  <h1>Welcome to Movie Night!</h1>
+  <p>Please log in to create or join a session.</p>
+</ng-template>
+
+<app-search></app-search>

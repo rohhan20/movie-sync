@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../services/auth.service';
+import { SessionService } from '../services/session.service';
+import { SearchComponent } from '../features/search/search.component';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-home',
@@ -20,7 +23,7 @@ import { AuthService } from '../services/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
-    AsyncPipe
+    SearchComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
@@ -30,12 +33,19 @@ export class HomeComponent {
 
   joinCode: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private sessionService: SessionService, private authService: AuthService) {}
 
   createSession(): void {
-    // Generate a random session ID for the mock implementation
-    const newSessionId = Math.random().toString(36).substring(2, 8);
-    this.router.navigate(['/session', newSessionId]);
+    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
+      if (user) {
+        this.sessionService.createSession(user.uid).subscribe(session => {
+          this.router.navigate(['/session', session.id]);
+        });
+      } else {
+        // Handle case where user is not logged in
+        console.error('User not logged in, cannot create session.');
+      }
+    });
   }
 
   joinSession(): void {

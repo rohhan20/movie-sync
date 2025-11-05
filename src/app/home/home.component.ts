@@ -11,6 +11,8 @@ import { AuthService } from '../services/auth.service';
 import { SessionService } from '../services/session.service';
 import { SearchComponent } from '../features/search/search.component';
 import { take } from 'rxjs/operators';
+import { User } from '../models/user.model';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -29,7 +31,7 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-  readonly currentUser$ = inject(AuthService).currentUser$;
+  currentUser$: Observable<User | null> = inject(AuthService).currentUser$;
 
   joinCode: string = '';
 
@@ -38,8 +40,8 @@ export class HomeComponent {
   createSession(): void {
     this.authService.currentUser$.pipe(take(1)).subscribe(user => {
       if (user) {
-        this.sessionService.createSession(user.uid).subscribe(session => {
-          this.router.navigate(['/session', session.id]);
+        this.sessionService.createSession(user.uid).subscribe(sessionId => {
+          this.router.navigate(['/session', sessionId]);
         });
       } else {
         // Handle case where user is not logged in

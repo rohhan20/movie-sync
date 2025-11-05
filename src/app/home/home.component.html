@@ -1,4 +1,11 @@
+ currentUser$ | async as currentUser
 <div class="home-container">
+  @if( currentUser$) {
+    <h2>Welcome back, {{ currentUser$.displayName}}!</h2>
+  } @else {
+    <h2>Welcome to MovieSync!</h2>
+    <p>Your go-to app for syncing movie nights with friends.</p>
+  }
   <div class="actions-grid">
     <mat-card class="action-card">
       <mat-card-header>

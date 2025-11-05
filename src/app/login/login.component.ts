@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -24,13 +24,13 @@ import { AuthService } from '../services/auth.service';
 })
 export class LoginComponent {
   loginForm: FormGroup;
+  private authService: AuthService = inject(AuthService);
+  private readonly router: Router = inject(Router);
+  
 
   constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
   ) {
-    this.loginForm = this.fb.group({
+    this.loginForm = new FormGroup({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required]]
     });

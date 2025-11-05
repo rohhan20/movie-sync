@@ -1,14 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FormControl } from '@angular/forms';
 import { Observable, of } from 'rxjs';
-import { startWith, switchMap, map } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
@@ -31,7 +29,6 @@ import { MovieService } from '../services/movie.service';
     MatListModule,
     MatFormFieldModule,
     MatInputModule,
-    MatAutocompleteModule,
     MatButtonModule,
     MatIconModule,
     MatGridListModule,
@@ -45,12 +42,10 @@ export class ProfileComponent implements OnInit {
   user$: Observable<User | null>;
   watchedMovies$: Observable<Movie[]>;
   recommendations$: Observable<Movie[]>;
-  searchControl = new FormControl();
-  filteredMovies$: Observable<Movie[]>;
-  watchedMovieIds: string[] = [];
+  watchedMovieIds: number[] = [];
 
-  genres: string[] = [];
-  selectedGenre = '';
+  genres: { id: number, name: string }[] = [];
+  selectedGenre: number | null = null;
   selectedYear: number | null = null;
   selectedRating: number | null = null;
 
@@ -60,7 +55,6 @@ export class ProfileComponent implements OnInit {
   ) {
     this.user$ = this.userService.getUserProfile();
     this.watchedMovies$ = this.userService.getWatchedMovies();
-    this.filteredMovies$ = of([]);
     this.recommendations$ = of([]);
   }
 
@@ -69,52 +63,29 @@ export class ProfileComponent implements OnInit {
       map(movies => movies.map(m => m.id))
     ).subscribe(ids => this.watchedMovieIds = ids);
 
-    this.filteredMovies$ = this.searchControl.valueChanges.pipe(
-      startWith(''),
-      switchMap(value => {
-        if (typeof value === 'string' && value.length > 1) {
-          return this.movieService.searchMovies(value, this.watchedMovieIds);
-        } else {
-          return of([]);
-        }
-      })
-    );
-
     this.applyFilters();
 
-    this.movieService.getAllMovies().pipe(
-      map(movies => [...new Set(movies.map(m => m.genre))])
-    ).subscribe(genres => this.genres = genres);
+    this.movieService.getGenres().subscribe(genres => this.genres = genres);
   }
 
   applyFilters(): void {
+    const filters = {
+      genre: this.selectedGenre,
+      year: this.selectedYear,
+      rating: this.selectedRating
+    };
+
     this.recommendations$ = this.user$.pipe(
       switchMap(user => {
         if (user) {
-          return this.movieService.getRecommendations([user.uid], this.watchedMovieIds);
+          return this.movieService.getRecommendations([user.uid], filters, this.watchedMovieIds);
         }
         return of([]);
-      }),
-      map(movies => movies.filter(movie => {
-        const genreMatch = !this.selectedGenre || movie.genre === this.selectedGenre;
-        const yearMatch = !this.selectedYear || movie.year === this.selectedYear;
-        const ratingMatch = !this.selectedRating || movie.rating >= this.selectedRating;
-        return genreMatch && yearMatch && ratingMatch;
-      }))
+      })
     );
   }
 
-  displayMovie(movie: Movie): string {
-    return movie ? movie.title : '';
-  }
-
-  addMovieToWatched(movie: Movie): void {
-    this.userService.addToWatched(movie).subscribe(() => {
-      this.searchControl.setValue('');
-    });
-  }
-
-  removeMovieFromWatched(movieId: string): void {
-    this.userService.removeFromWatched(movieId).subscribe();
+  removeMovieFromWatched(movieId: number): void {
+    this.userService.removeFromWatched(movieId.toString()).subscribe();
   }
 }

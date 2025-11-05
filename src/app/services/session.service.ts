@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc } from '@angular/fire/firestore';
-import { Observable, from, of } from 'rxjs';
+import { Observable, from, of, combineLatest } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { Movie } from '../models/movie.model';
 import { MovieService } from './movie.service';
 import { Session } from '../models/session.model';
-import { collectionData } from '@angular/fire/firestore';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,7 @@ export class SessionService {
   private firestore: Firestore = inject(Firestore);
   private sessionsCollection = collection(this.firestore, 'sessions');
 
-  constructor(private movieService: MovieService) { }
+  constructor(private movieService: MovieService, private userService: UserService) { }
 
   createSession(userId: string): Observable<string> {
     const newSessionRef = doc(this.sessionsCollection);
@@ -60,19 +60,16 @@ export class SessionService {
   }
 
   private updateRecommendations(session: Session): Observable<Session> {
-    // This is a simplified recommendation logic. In a real app, this would be more complex.
-    return this.movieService.getAllMovies().pipe(
-      map(movies => {
-        // Get a list of all movies watched by all members in the session.
-        // This would require fetching each user's watched list, which is out of scope for this example.
-        // For now, we will just recommend movies that none of the users have watched.
-        const watchedMovieIds = session.members.reduce((acc, memberId) => {
-          // In a real app, you would fetch the watched movies for each member.
-          // For now, we'll just use an empty array.
-          return acc;
-        }, [] as string[]);
+    const memberWatchedMovies$ = session.members.map(memberId => this.userService.getWatchedMovies());
 
-        const recommendations = movies.filter(movie => !watchedMovieIds.includes(movie.id)).slice(0, 5);
+    return combineLatest(memberWatchedMovies$).pipe(
+      switchMap(watchedMoviesByMember => {
+        const allWatchedMovieIds = watchedMoviesByMember.flat().map(movie => movie.id);
+        const uniqueWatchedMovieIds = [...new Set(allWatchedMovieIds)];
+
+        return this.movieService.getRecommendations(session.members, {}, uniqueWatchedMovieIds);
+      }),
+      map(recommendations => {
         const sessionDoc = doc(this.sessionsCollection, session.id);
         updateDoc(sessionDoc, { recommendations });
         return { ...session, recommendations };

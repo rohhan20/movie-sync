@@ -21,7 +21,7 @@
           <mat-label>Genre</mat-label>
           <mat-select [(ngModel)]="selectedGenre" (selectionChange)="applyFilters()">
             <mat-option value="">All</mat-option>
-            <mat-option *ngFor="let genre of genres" [value]="genre">{{ genre }}</mat-option>
+            <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -38,12 +38,12 @@
       <mat-grid-list cols="3" rowHeight="400px" gutterSize="16px" *ngIf="session.recommendations?.length; else noRecommendations">
         <mat-grid-tile *ngFor="let movie of session.recommendations">
           <mat-card class="movie-card">
-            <img mat-card-image [src]="movie.posterUrl" [alt]="movie.title">
+            <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }}">
             <mat-card-header>
               <mat-card-title>{{ movie.title }}</mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <p>{{ movie.description }}</p>
+              <p>{{ movie.overview }}</p>
             </mat-card-content>
           </mat-card>
         </mat-grid-tile>

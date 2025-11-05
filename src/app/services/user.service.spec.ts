@@ -4,31 +4,34 @@ import { Auth } from '@angular/fire/auth';
 import { Firestore } from '@angular/fire/firestore';
 import { AuthService } from './auth.service';
 import { of } from 'rxjs';
-import * as firestore from '@angular/fire/firestore';
-
-const authServiceMock = {
-  currentUser$: of({ uid: '123' }),
-  currentUserValue: { uid: '123' }
-};
 
 describe('UserService', () => {
   let service: UserService;
+  let firestoreSpy: jasmine.SpyObj<Firestore>;
+  let authServiceSpy: jasmine.SpyObj<AuthService>;
 
   beforeEach(() => {
+    const fsSpy = jasmine.createSpyObj('Firestore', ['collection', 'doc', 'collectionData']);
+    const asSpy = jasmine.createSpyObj('AuthService', ['currentUser$']);
+
     TestBed.configureTestingModule({
       providers: [
+        UserService,
         { provide: Auth, useValue: {} },
-        { provide: Firestore, useValue: {} },
-        { provide: AuthService, useValue: authServiceMock }
+        { provide: Firestore, useValue: fsSpy },
+        { provide: AuthService, useValue: asSpy }
       ]
     });
-    spyOn(firestore, 'collection').and.returnValue({} as any);
-    spyOn(firestore, 'doc').and.returnValue({} as any);
-    spyOn(firestore, 'collectionData').and.returnValue(of([]));
     service = TestBed.inject(UserService);
+    firestoreSpy = TestBed.inject(Firestore) as jasmine.SpyObj<Firestore>;
+    authServiceSpy = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
   });
 
   it('should be created', () => {
+    (authServiceSpy.currentUser$ as any).and.returnValue(of({ uid: '123' } as any));
+    (firestoreSpy.collection as any).and.returnValue({} as any);
+    (firestoreSpy.doc as any).and.returnValue({} as any);
+    (firestoreSpy.collectionData as any).and.returnValue(of([]));
     expect(service).toBeTruthy();
   });
 });

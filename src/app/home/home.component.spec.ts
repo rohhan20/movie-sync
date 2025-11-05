@@ -19,7 +19,7 @@ const sessionServiceMock = {
 };
 
 const movieServiceMock = {
-  getAllMovies: () => of([]),
+  getGenres: () => of([]),
   searchMovies: () => of([])
 };
 

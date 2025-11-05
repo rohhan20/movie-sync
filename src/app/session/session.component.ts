@@ -41,13 +41,13 @@ export class SessionComponent implements OnInit, OnDestroy {
   private sessionSubscription: Subscription | undefined;
   private sessionId: string | null = null;
 
-  genres: string[] = [];
-  selectedGenre = '';
+  genres: { id: number, name: string }[] = [];
+  selectedGenre: number | null = null;
   selectedYear: number | null = null;
   selectedRating: number | null = null;
 
-  private filters$ = new BehaviorSubject<{ genre: string, year: number | null, rating: number | null }>({
-    genre: '',
+  private filters$ = new BehaviorSubject<{ genre: number | null, year: number | null, rating: number | null }>({
+    genre: null,
     year: null,
     rating: null
   });
@@ -84,18 +84,16 @@ export class SessionComponent implements OnInit, OnDestroy {
           return null;
         }
         const recommendations = session.recommendations.filter(movie => {
-          const genreMatch = !filters.genre || movie.genre === filters.genre;
-          const yearMatch = !filters.year || movie.year === filters.year;
-          const ratingMatch = !filters.rating || movie.rating >= filters.rating;
+          const genreMatch = !filters.genre || movie.genre_ids.includes(filters.genre);
+          const yearMatch = !filters.year || new Date(movie.release_date).getFullYear() === filters.year;
+          const ratingMatch = !filters.rating || movie.vote_average >= filters.rating;
           return genreMatch && yearMatch && ratingMatch;
         });
         return { ...session, recommendations };
       })
     );
 
-    this.movieService.getAllMovies().pipe(
-      map(movies => [...new Set(movies.map(m => m.genre))])
-    ).subscribe(genres => this.genres = genres);
+    this.movieService.getGenres().subscribe(genres => this.genres = genres);
   }
 
   ngOnDestroy(): void {

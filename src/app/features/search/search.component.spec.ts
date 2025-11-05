@@ -8,7 +8,7 @@ import { UserService } from '../../services/user.service';
 import { of } from 'rxjs';
 
 const movieServiceMock = {
-  getAllMovies: () => of([]),
+  getGenres: () => of([]),
   searchMovies: () => of([])
 };
 

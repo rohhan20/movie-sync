@@ -1,0 +1,13 @@
+<div>
+  <input type="text" [(ngModel)]="searchQuery" placeholder="Search for a movie...">
+  <button (click)="search()">Search</button>
+</div>
+
+<div *ngIf="searchResults$ | async as movies">
+  <div *ngFor="let movie of movies" class="movie-card">
+    <img [src]="movie.posterUrl" alt="{{ movie.title }} poster">
+    <h3>{{ movie.title }}</h3>
+    <p>{{ movie.description }}</p>
+    <button (click)="addToWatched(movie)">Add to Watched List</button>
+  </div>
+</div>

@@ -1,20 +1,37 @@
-<div class="session-container">
-  <div *ngIf="sessionId$ | async as sessionId" class="session-header">
-    <h1>Session Code: {{ sessionId }}</h1>
-    <p>Here are the movie recommendations for your group!</p>
+<div class="session-container" *ngIf="session$ | async as session">
+  <div class="session-header">
+    <h1>Session Code: {{ session.id }}</h1>
+    <button mat-raised-button color="warn" (click)="leaveSession()">Leave Session</button>
   </div>
 
-  <mat-grid-list cols="3" rowHeight="400px" gutterSize="16px" *ngIf="recommendations$ | async as recommendations">
-    <mat-grid-tile *ngFor="let movie of recommendations">
-      <mat-card class="movie-card">
-        <img mat-card-image [src]="movie.posterUrl" [alt]="movie.title">
-        <mat-card-header>
-          <mat-card-title>{{ movie.title }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>{{ movie.description }}</p>
-        </mat-card-content>
-      </mat-card>
-    </mat-grid-tile>
-  </mat-grid-list>
+  <div class="session-content">
+    <div class="members-container">
+      <h2>Members in Session</h2>
+      <mat-list>
+        <mat-list-item *ngFor="let memberId of session.members">
+          {{ memberId }}
+        </mat-list-item>
+      </mat-list>
+    </div>
+
+    <div class="recommendations-container">
+      <h2>Common Recommendations</h2>
+      <mat-grid-list cols="3" rowHeight="400px" gutterSize="16px" *ngIf="session.recommendations?.length; else noRecommendations">
+        <mat-grid-tile *ngFor="let movie of session.recommendations">
+          <mat-card class="movie-card">
+            <img mat-card-image [src]="movie.posterUrl" [alt]="movie.title">
+            <mat-card-header>
+              <mat-card-title>{{ movie.title }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p>{{ movie.description }}</p>
+            </mat-card-content>
+          </mat-card>
+        </mat-grid-tile>
+      </mat-grid-list>
+      <ng-template #noRecommendations>
+        <p>No common recommendations found yet. Invite more friends!</p>
+      </ng-template>
+    </div>
+  </div>
 </div>

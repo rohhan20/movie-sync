@@ -1,20 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { MovieService } from './movie.service';
-import { Firestore } from '@angular/fire/firestore';
-import * as firestore from '@angular/fire/firestore';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 describe('MovieService', () => {
   let service: MovieService;
+  let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        { provide: Firestore, useValue: {} }
-      ]
+      imports: [HttpClientTestingModule],
+      providers: [MovieService]
     });
-    spyOn(firestore, 'collection').and.returnValue({} as any);
-    spyOn(firestore, 'getDocs').and.returnValue(Promise.resolve({ docs: [] } as any));
     service = TestBed.inject(MovieService);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   it('should be created', () => {

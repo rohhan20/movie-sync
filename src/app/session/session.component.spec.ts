@@ -21,7 +21,7 @@ const sessionServiceMock = {
 };
 
 const movieServiceMock = {
-  getAllMovies: () => of([])
+  getGenres: () => of([])
 };
 
 describe('SessionComponent', () => {

@@ -48,7 +48,7 @@ export class UserService {
     if (!user) {
       return of(undefined);
     }
-    const watchedMovieDoc = doc(collection(doc(this.usersCollection, user.uid), 'watchedMovies'), movie.id);
+    const watchedMovieDoc = doc(collection(doc(this.usersCollection, user.uid), 'watchedMovies'), movie.id.toString());
     return from(setDoc(watchedMovieDoc, movie));
   }
 

@@ -17,7 +17,7 @@ const userServiceMock = {
 };
 
 const movieServiceMock = {
-  getAllMovies: () => of([]),
+  getGenres: () => of([]),
   getRecommendations: () => of([])
 };
 

@@ -11,20 +11,10 @@
       <mat-card-title>My Watched List</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <mat-form-field class="search-field" appearance="fill">
-        <mat-label>Add a movie to your watched list</mat-label>
-        <input type="text" matInput [formControl]="searchControl" [matAutocomplete]="auto">
-        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayMovie" (optionSelected)="addMovieToWatched($event.option.value)">
-          <mat-option *ngFor="let movie of filteredMovies$ | async" [value]="movie">
-            {{ movie.title }}
-          </mat-option>
-        </mat-autocomplete>
-      </mat-form-field>
-
       <mat-list *ngIf="watchedMovies$ | async as watchedMovies">
         <mat-list-item *ngFor="let movie of watchedMovies">
           <span matListItemTitle>{{ movie.title }}</span>
-          <span matListItemLine>{{ movie.description }}</span>
+          <span matListItemLine>{{ movie.overview }}</span>
           <button mat-icon-button (click)="removeMovieFromWatched(movie.id)">
             <mat-icon>delete</mat-icon>
           </button>
@@ -43,7 +33,7 @@
           <mat-label>Genre</mat-label>
           <mat-select [(ngModel)]="selectedGenre" (selectionChange)="applyFilters()">
             <mat-option value="">All</mat-option>
-            <mat-option *ngFor="let genre of genres" [value]="genre">{{ genre }}</mat-option>
+            <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
           </mat-select>
         </mat-form-field>
 
@@ -60,7 +50,7 @@
       <mat-grid-list cols="3" rowHeight="350px" gutterSize="16px">
         <mat-grid-tile *ngFor="let movie of recommendations$ | async">
           <mat-card class="movie-card">
-            <img mat-card-image [src]="movie.posterUrl" [alt]="movie.title">
+            <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }}">
             <mat-card-content>
               <mat-card-title>{{ movie.title }}</mat-card-title>
             </mat-card-content>

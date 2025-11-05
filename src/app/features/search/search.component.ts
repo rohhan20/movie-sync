@@ -26,10 +26,10 @@ import { MatSliderModule } from '@angular/material/slider';
 export class SearchComponent implements OnInit {
   searchQuery = '';
   searchResults$: Observable<Movie[]> = of([]);
-  watchedMovieIds: string[] = [];
+  watchedMovieIds: number[] = [];
 
-  genres: string[] = [];
-  selectedGenre = '';
+  genres: { id: number, name: string }[] = [];
+  selectedGenre: number | null = null;
   selectedYear: number | null = null;
   selectedRating: number | null = null;
 
@@ -40,20 +40,16 @@ export class SearchComponent implements OnInit {
       map(movies => movies.map(m => m.id))
     ).subscribe(ids => this.watchedMovieIds = ids);
 
-    this.movieService.getAllMovies().pipe(
-      map(movies => [...new Set(movies.map(m => m.genre))])
-    ).subscribe(genres => this.genres = genres);
+    this.movieService.getGenres().subscribe(genres => this.genres = genres);
   }
 
   search(): void {
-    this.searchResults$ = this.movieService.searchMovies(this.searchQuery, this.watchedMovieIds).pipe(
-      map(movies => movies.filter(movie => {
-        const genreMatch = !this.selectedGenre || movie.genre === this.selectedGenre;
-        const yearMatch = !this.selectedYear || movie.year === this.selectedYear;
-        const ratingMatch = !this.selectedRating || movie.rating >= this.selectedRating;
-        return genreMatch && yearMatch && ratingMatch;
-      }))
-    );
+    const filters = {
+      genre: this.selectedGenre,
+      year: this.selectedYear,
+      rating: this.selectedRating
+    };
+    this.searchResults$ = this.movieService.searchMovies(this.searchQuery, filters, this.watchedMovieIds);
   }
 
   addToWatched(movie: Movie): void {

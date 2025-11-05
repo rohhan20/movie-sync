@@ -8,7 +8,7 @@
     <mat-label>Genre</mat-label>
     <mat-select [(ngModel)]="selectedGenre" (selectionChange)="search()">
       <mat-option value="">All</mat-option>
-      <mat-option *ngFor="let genre of genres" [value]="genre">{{ genre }}</mat-option>
+      <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
     </mat-select>
   </mat-form-field>
 
@@ -25,9 +25,9 @@
 
 <div *ngIf="searchResults$ | async as movies">
   <div *ngFor="let movie of movies" class="movie-card">
-    <img [src]="movie.posterUrl" alt="{{ movie.title }} poster">
+    <img [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }} poster">
     <h3>{{ movie.title }}</h3>
-    <p>{{ movie.description }}</p>
+    <p>{{ movie.overview }}</p>
     <button (click)="addToWatched(movie)">Add to Watched List</button>
   </div>
 </div>

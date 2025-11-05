@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, collectionData } from '@angular/fire/firestore';
+import { Observable, from, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { User } from '../models/user.model';
 import { Movie } from '../models/movie.model';
 import { AuthService } from './auth.service';
@@ -9,70 +10,54 @@ import { AuthService } from './auth.service';
   providedIn: 'root'
 })
 export class UserService {
-  private mockUsers: User[] = [
-    {
-      uid: '123',
-      email: 'user@example.com',
-      displayName: 'Test User',
-      watchedMovies: [
-        { id: '4', title: 'Parasite', description: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.', posterUrl: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg', genre: 'Thriller', year: 2019, rating: 8.6 },
-      ]
-    }
-  ];
+  private firestore: Firestore = inject(Firestore);
+  private usersCollection = collection(this.firestore, 'users');
 
-  private currentUser: BehaviorSubject<User | null>;
-
-  constructor(private authService: AuthService) {
-    this.currentUser = new BehaviorSubject<User | null>(null);
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        const foundUser = this.mockUsers.find(u => u.uid === user.uid);
-        this.currentUser.next(foundUser || null);
-      } else {
-        this.currentUser.next(null);
-      }
-    });
-  }
+  constructor(private authService: AuthService) { }
 
   getUserProfile(): Observable<User | null> {
-    return this.currentUser.asObservable();
-  }
-
-  getWatchedMovies(): Observable<Movie[]> {
-    return this.currentUser.pipe(
-      map(user => user ? user.watchedMovies : [])
+    return this.authService.currentUser$.pipe(
+      switchMap(user => {
+        if (user) {
+          const userDoc = doc(this.usersCollection, user.uid);
+          return from(getDoc(userDoc)).pipe(
+            map(docSnap => docSnap.exists() ? docSnap.data() as User : null)
+          );
+        } else {
+          return of(null);
+        }
+      })
     );
   }
 
-  addToWatched(movie: Movie): Observable<boolean> {
-    const user = this.currentUser.value;
-    if (!user) {
-      return throwError(() => new Error('User not logged in'));
-    }
-
-    const alreadyWatched = user.watchedMovies.find(m => m.id === movie.id);
-    if (alreadyWatched) {
-      return of(false); // Already in the list
-    }
-
-    user.watchedMovies.push(movie);
-    this.currentUser.next(user);
-    return of(true);
+  getWatchedMovies(): Observable<Movie[]> {
+    return this.authService.currentUser$.pipe(
+      switchMap(user => {
+        if (user) {
+          const watchedMoviesCollection = collection(doc(this.usersCollection, user.uid), 'watchedMovies');
+          return collectionData(watchedMoviesCollection, { idField: 'id' }) as Observable<Movie[]>;
+        } else {
+          return of([]);
+        }
+      })
+    );
   }
 
-  removeFromWatched(movieId: string): Observable<boolean> {
-    const user = this.currentUser.value;
+  addToWatched(movie: Movie): Observable<void> {
+    const user = this.authService.currentUserValue;
     if (!user) {
-      return throwError(() => new Error('User not logged in'));
+      return of(undefined);
     }
+    const watchedMovieDoc = doc(collection(doc(this.usersCollection, user.uid), 'watchedMovies'), movie.id);
+    return from(setDoc(watchedMovieDoc, movie));
+  }
 
-    const movieIndex = user.watchedMovies.findIndex(m => m.id === movieId);
-    if (movieIndex > -1) {
-      user.watchedMovies.splice(movieIndex, 1);
-      this.currentUser.next(user);
-      return of(true);
+  removeFromWatched(movieId: string): Observable<void> {
+    const user = this.authService.currentUserValue;
+    if (!user) {
+      return of(undefined);
     }
-
-    return of(false); // Not found
+    const watchedMovieDoc = doc(collection(doc(this.usersCollection, user.uid), 'watchedMovies'), movieId);
+    return from(deleteDoc(watchedMovieDoc));
   }
 }

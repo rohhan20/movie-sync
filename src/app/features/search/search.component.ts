@@ -57,12 +57,8 @@ export class SearchComponent implements OnInit {
   }
 
   addToWatched(movie: Movie): void {
-    this.userService.addToWatched(movie).subscribe(success => {
-      if (success) {
-        console.log(`Added ${movie.title} to watched list.`);
-      } else {
-        console.log(`${movie.title} is already in the watched list.`);
-      }
+    this.userService.addToWatched(movie).subscribe(() => {
+      console.log(`Added ${movie.title} to watched list.`);
     });
   }
 }

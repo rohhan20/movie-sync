@@ -1,74 +1,81 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc } from '@angular/fire/firestore';
+import { Observable, from, of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { Movie } from '../models/movie.model';
 import { MovieService } from './movie.service';
 import { Session } from '../models/session.model';
+import { collectionData } from '@angular/fire/firestore';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SessionService {
-  private sessions: { [id: string]: Session } = {};
-  private sessionSubjects: { [id: string]: BehaviorSubject<Session | null> } = {};
+  private firestore: Firestore = inject(Firestore);
+  private sessionsCollection = collection(this.firestore, 'sessions');
 
   constructor(private movieService: MovieService) { }
 
-  private getSessionSubject(sessionId: string): BehaviorSubject<Session | null> {
-    if (!this.sessionSubjects[sessionId]) {
-      this.sessionSubjects[sessionId] = new BehaviorSubject<Session | null>(this.sessions[sessionId] || null);
-    }
-    return this.sessionSubjects[sessionId];
-  }
-
-  createSession(userId: string): Observable<Session> {
-    const sessionId = Math.random().toString(36).substring(2, 8);
+  createSession(userId: string): Observable<string> {
+    const newSessionRef = doc(this.sessionsCollection);
     const newSession: Session = {
-      id: sessionId,
+      id: newSessionRef.id,
       members: [userId],
       recommendations: []
     };
-    this.sessions[sessionId] = newSession;
-    this.getSessionSubject(sessionId).next(newSession);
-    return this.updateRecommendations(sessionId);
+    return from(setDoc(newSessionRef, newSession)).pipe(
+      map(() => newSessionRef.id)
+    );
   }
 
-  joinSession(sessionId: string, userId: string): Observable<Session> {
-    const session = this.sessions[sessionId];
-    if (session && !session.members.includes(userId)) {
-      session.members.push(userId);
-      this.getSessionSubject(sessionId).next(session);
-      return this.updateRecommendations(sessionId);
-    }
-    return of(session);
+  joinSession(sessionId: string, userId: string): Observable<void> {
+    const sessionDoc = doc(this.sessionsCollection, sessionId);
+    return from(updateDoc(sessionDoc, {
+      members: arrayUnion(userId)
+    }));
   }
 
-  leaveSession(sessionId: string, userId: string): void {
-    const session = this.sessions[sessionId];
-    if (session) {
-      session.members = session.members.filter(uid => uid !== userId);
-      if (session.members.length === 0) {
-        delete this.sessions[sessionId];
-        this.getSessionSubject(sessionId).next(null);
-        delete this.sessionSubjects[sessionId];
-      } else {
-        this.getSessionSubject(sessionId).next(session);
-        this.updateRecommendations(sessionId).subscribe();
-      }
-    }
+  leaveSession(sessionId: string, userId: string): Observable<void> {
+    const sessionDoc = doc(this.sessionsCollection, sessionId);
+    return from(updateDoc(sessionDoc, {
+      members: arrayRemove(userId)
+    }));
   }
 
   getSession(sessionId: string): Observable<Session | null> {
-    return this.getSessionSubject(sessionId).asObservable();
+    const sessionDoc = doc(this.sessionsCollection, sessionId);
+    return new Observable(subscriber => {
+      const unsubscribe = onSnapshot(sessionDoc, (docSnap) => {
+        if (docSnap.exists()) {
+          const session = { id: docSnap.id, ...docSnap.data() } as Session;
+          this.updateRecommendations(session).subscribe(updatedSession => {
+            subscriber.next(updatedSession);
+          });
+        } else {
+          subscriber.next(null);
+        }
+      });
+      return () => unsubscribe();
+    });
   }
 
-  private updateRecommendations(sessionId: string): Observable<Session> {
-    const session = this.sessions[sessionId];
-    return this.movieService.getRecommendations(session.members).pipe(
-      map(recommendations => {
-        session.recommendations = recommendations;
-        this.getSessionSubject(sessionId).next(session);
-        return session;
+  private updateRecommendations(session: Session): Observable<Session> {
+    // This is a simplified recommendation logic. In a real app, this would be more complex.
+    return this.movieService.getAllMovies().pipe(
+      map(movies => {
+        // Get a list of all movies watched by all members in the session.
+        // This would require fetching each user's watched list, which is out of scope for this example.
+        // For now, we will just recommend movies that none of the users have watched.
+        const watchedMovieIds = session.members.reduce((acc, memberId) => {
+          // In a real app, you would fetch the watched movies for each member.
+          // For now, we'll just use an empty array.
+          return acc;
+        }, [] as string[]);
+
+        const recommendations = movies.filter(movie => !watchedMovieIds.includes(movie.id)).slice(0, 5);
+        const sessionDoc = doc(this.sessionsCollection, session.id);
+        updateDoc(sessionDoc, { recommendations });
+        return { ...session, recommendations };
       })
     );
   }

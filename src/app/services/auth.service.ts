@@ -1,30 +1,39 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, of } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from '@angular/fire/auth';
+import { BehaviorSubject, from } from 'rxjs';
 import { User } from '../models/user.model';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private auth: Auth = inject(Auth);
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor() { }
-
-  login(email: string, password: string) {
-    // In a real app, you'd call an API. Here, we'll create a mock user.
-    const mockUser: User = {
-      uid: '123',
-      email: email,
-      displayName: 'Test User',
-      watchedMovies: []
-    };
-    this.currentUserSubject.next(mockUser);
-    return of({ success: true });
+  constructor() {
+    onAuthStateChanged(this.auth, (user) => {
+      if (user) {
+        const a: User = {
+          uid: user.uid,
+          email: user.email!,
+          displayName: user.displayName!,
+          watchedMovies: []
+        };
+        this.currentUserSubject.next(a);
+      } else {
+        this.currentUserSubject.next(null);
+      }
+    });
   }
 
-  logout() {
-    this.currentUserSubject.next(null);
+  login(email: string, password: string): Observable<any> {
+    return from(signInWithEmailAndPassword(this.auth, email, password));
+  }
+
+  logout(): Observable<void> {
+    return from(signOut(this.auth));
   }
 
   get currentUserValue(): User | null {

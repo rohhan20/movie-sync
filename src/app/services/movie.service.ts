@@ -8,12 +8,12 @@ import { Movie } from '../models/movie.model';
 })
 export class MovieService {
   private mockMovies: Movie[] = [
-    { id: '1', title: 'Inception', description: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.', posterUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg' },
-    { id: '2', title: 'The Dark Knight', description: 'When the menace known as the Joker emerges from his mysterious past, he wreaks havoc and chaos on the people of Gotham.', posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg' },
-    { id: '3', title: 'Interstellar', description: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.', posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg' },
-    { id: '4', title: 'Parasite', description: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.', posterUrl: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg' },
-    { id: '5', title: 'The Matrix', description: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.', posterUrl: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg' },
-    { id: '6', title: 'Pulp Fiction', description: 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.', posterUrl: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg' }
+    { id: '1', title: 'Inception', description: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.', posterUrl: 'https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg', genre: 'Sci-Fi', year: 2010, rating: 8.8 },
+    { id: '2', title: 'The Dark Knight', description: 'When the menace known as the Joker emerges from his mysterious past, he wreaks havoc and chaos on the people of Gotham.', posterUrl: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', genre: 'Action', year: 2008, rating: 9.0 },
+    { id: '3', title: 'Interstellar', description: 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.', posterUrl: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', genre: 'Sci-Fi', year: 2014, rating: 8.6 },
+    { id: '4', title: 'Parasite', description: 'Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.', posterUrl: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg', genre: 'Thriller', year: 2019, rating: 8.6 },
+    { id: '5', title: 'The Matrix', description: 'A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.', posterUrl: 'https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg', genre: 'Sci-Fi', year: 1999, rating: 8.7 },
+    { id: '6', title: 'Pulp Fiction', description: 'The lives of two mob hitmen, a boxer, a gangster and his wife, and a pair of diner bandits intertwine in four tales of violence and redemption.', posterUrl: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg', genre: 'Crime', year: 1994, rating: 8.9 }
   ];
 
   constructor() { }
@@ -26,20 +26,26 @@ export class MovieService {
     return of(this.mockMovies.find(m => m.id === id));
   }
 
-  searchMovies(query: string): Observable<Movie[]> {
+  searchMovies(query: string, watchedMovieIds: string[] = []): Observable<Movie[]> {
     const lowerCaseQuery = query.toLowerCase();
     return this.getAllMovies().pipe(
-      map(movies => movies.filter(movie => movie.title.toLowerCase().includes(lowerCaseQuery)))
+      map(movies => movies.filter(movie =>
+        movie.title.toLowerCase().includes(lowerCaseQuery) && !watchedMovieIds.includes(movie.id)
+      ))
     );
   }
 
-  getRecommendations(userIds: string[]): Observable<Movie[]> {
+  getRecommendations(userIds: string[], watchedMovieIds: string[] = []): Observable<Movie[]> {
+    let recommendations: Movie[];
     // If userIds are provided (e.g., for personalized recommendations), return a different set of movies.
     if (userIds && userIds.length > 0) {
       // Simulate personalized recommendations by returning the latter half of the mock list.
-      return of(this.mockMovies.slice(3, 6));
+      recommendations = this.mockMovies.slice(3, 6);
+    } else {
+      // For group sessions, return the first half.
+      recommendations = this.mockMovies.slice(0, 3);
     }
-    // For group sessions, return the first half.
-    return of(this.mockMovies.slice(0, 3));
+
+    return of(recommendations.filter(movie => !watchedMovieIds.includes(movie.id)));
   }
 }

@@ -1,43 +1,66 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { Observable, of, Subscription } from 'rxjs';
-import { switchMap, take } from 'rxjs/operators';
+import { FormsModule } from '@angular/forms';
+import { Observable, of, Subscription, BehaviorSubject, combineLatest } from 'rxjs';
+import { switchMap, take, map } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
 import { Session } from '../models/session.model';
 import { SessionService } from '../services/session.service';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.model';
+import { MovieService } from '../services/movie.service';
 
 @Component({
   selector: 'app-session',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatGridListModule,
     MatButtonModule,
-    MatListModule
+    MatListModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatSliderModule
   ],
   templateUrl: './session.component.html',
   styleUrls: ['./session.component.css']
 })
 export class SessionComponent implements OnInit, OnDestroy {
   session$: Observable<Session | null>;
+  filteredSession$: Observable<Session | null>;
   currentUser: User | null = null;
   private sessionSubscription: Subscription | undefined;
   private sessionId: string | null = null;
+
+  genres: string[] = [];
+  selectedGenre = '';
+  selectedYear: number | null = null;
+  selectedRating: number | null = null;
+
+  private filters$ = new BehaviorSubject<{ genre: string, year: number | null, rating: number | null }>({
+    genre: '',
+    year: null,
+    rating: null
+  });
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private sessionService: SessionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private movieService: MovieService
   ) {
     this.session$ = of(null);
+    this.filteredSession$ = of(null);
     this.authService.currentUser$.pipe(take(1)).subscribe(user => {
       this.currentUser = user;
     });
@@ -54,6 +77,25 @@ export class SessionComponent implements OnInit, OnDestroy {
         return of(null);
       })
     );
+
+    this.filteredSession$ = combineLatest([this.session$, this.filters$]).pipe(
+      map(([session, filters]) => {
+        if (!session) {
+          return null;
+        }
+        const recommendations = session.recommendations.filter(movie => {
+          const genreMatch = !filters.genre || movie.genre === filters.genre;
+          const yearMatch = !filters.year || movie.year === filters.year;
+          const ratingMatch = !filters.rating || movie.rating >= filters.rating;
+          return genreMatch && yearMatch && ratingMatch;
+        });
+        return { ...session, recommendations };
+      })
+    );
+
+    this.movieService.getAllMovies().pipe(
+      map(movies => [...new Set(movies.map(m => m.genre))])
+    ).subscribe(genres => this.genres = genres);
   }
 
   ngOnDestroy(): void {
@@ -63,6 +105,14 @@ export class SessionComponent implements OnInit, OnDestroy {
     if (this.sessionSubscription) {
       this.sessionSubscription.unsubscribe();
     }
+  }
+
+  applyFilters(): void {
+    this.filters$.next({
+      genre: this.selectedGenre,
+      year: this.selectedYear,
+      rating: this.selectedRating
+    });
   }
 
   leaveSession(): void {

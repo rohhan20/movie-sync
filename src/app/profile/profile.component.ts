@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import { Observable, of } from 'rxjs';
-import { startWith, switchMap } from 'rxjs/operators';
+import { startWith, switchMap, map } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,6 +12,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
 
 import { User } from '../models/user.model';
 import { Movie } from '../models/movie.model';
@@ -23,6 +26,7 @@ import { MovieService } from '../services/movie.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatListModule,
     MatFormFieldModule,
@@ -30,7 +34,9 @@ import { MovieService } from '../services/movie.service';
     MatAutocompleteModule,
     MatButtonModule,
     MatIconModule,
-    MatGridListModule
+    MatGridListModule,
+    MatSelectModule,
+    MatSliderModule
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
@@ -41,6 +47,12 @@ export class ProfileComponent implements OnInit {
   recommendations$: Observable<Movie[]>;
   searchControl = new FormControl();
   filteredMovies$: Observable<Movie[]>;
+  watchedMovieIds: string[] = [];
+
+  genres: string[] = [];
+  selectedGenre = '';
+  selectedYear: number | null = null;
+  selectedRating: number | null = null;
 
   constructor(
     private userService: UserService,
@@ -53,24 +65,42 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.userService.getWatchedMovies().pipe(
+      map(movies => movies.map(m => m.id))
+    ).subscribe(ids => this.watchedMovieIds = ids);
+
     this.filteredMovies$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       switchMap(value => {
         if (typeof value === 'string' && value.length > 1) {
-          return this.movieService.searchMovies(value);
+          return this.movieService.searchMovies(value, this.watchedMovieIds);
         } else {
           return of([]);
         }
       })
     );
 
+    this.applyFilters();
+
+    this.movieService.getAllMovies().pipe(
+      map(movies => [...new Set(movies.map(m => m.genre))])
+    ).subscribe(genres => this.genres = genres);
+  }
+
+  applyFilters(): void {
     this.recommendations$ = this.user$.pipe(
       switchMap(user => {
         if (user) {
-          return this.movieService.getRecommendations([user.uid]);
+          return this.movieService.getRecommendations([user.uid], this.watchedMovieIds);
         }
         return of([]);
-      })
+      }),
+      map(movies => movies.filter(movie => {
+        const genreMatch = !this.selectedGenre || movie.genre === this.selectedGenre;
+        const yearMatch = !this.selectedYear || movie.year === this.selectedYear;
+        const ratingMatch = !this.selectedRating || movie.rating >= this.selectedRating;
+        return genreMatch && yearMatch && ratingMatch;
+      }))
     );
   }
 

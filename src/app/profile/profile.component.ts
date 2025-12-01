@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Observable, of } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
@@ -12,8 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MovieCardComponent } from '../features/movie-card/movie-card.component';
 
 import { User } from '../models/user.model';
 import { Movie } from '../models/movie.model';
@@ -35,10 +33,7 @@ import { MovieService } from '../services/movie.service';
     MatIconModule,
     MatGridListModule,
     MatSelectModule,
-    MatSliderModule,
-    MatProgressSpinnerModule,
-    MovieCardComponent,
-    DatePipe
+    MatSliderModule
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']

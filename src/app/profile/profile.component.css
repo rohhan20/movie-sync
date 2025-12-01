@@ -1,47 +1,48 @@
 .profile-container {
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 32px;
 }
 
-.profile-card,
-.watched-list-card,
-.recommendations-card {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.recommendations-card .movie-card {
-  width: 100%;
+.profile-header {
   text-align: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #ddd;
 }
 
-.recommendations-card .movie-card img {
-  height: 250px;
-  object-fit: cover;
+.profile-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
 }
 
-.recommendations-card .movie-card mat-card-title {
-  font-size: 1em;
-  padding: 10px;
-  line-height: 1.2;
+.profile-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 32px;
 }
 
-.search-field {
-  width: 100%;
-  margin-bottom: 20px;
+.watched-list-container .mat-mdc-card-header {
+  padding-bottom: 8px;
 }
 
-mat-list-item {
-  margin-bottom: 10px;
+.empty-list-message {
+  padding: 16px;
+  text-align: center;
+  color: #666;
 }
 
-mat-list-item span[matListItemTitle] {
-  font-weight: 500;
+.recommendations-container h2 {
+  font-size: 1.8rem;
+  margin-bottom: 16px;
 }
 
-mat-list-item span[matListItemLine] {
-  color: rgba(0, 0, 0, 0.54);
+.filter-controls {
+  margin-bottom: 24px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
 }

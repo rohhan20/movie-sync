@@ -1,15 +1,17 @@
-.movie-card {
+.search-controls {
   display: flex;
-  flex-direction: column;
+  gap: 16px;
   align-items: center;
-  margin: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  width: 200px;
+  margin-bottom: 24px;
 }
 
-.movie-card img {
-  width: 100%;
-  height: auto;
+.search-input {
+  flex-grow: 1;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
 }

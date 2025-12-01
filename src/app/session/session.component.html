@@ -1,56 +1,72 @@
-<div class="session-container" *ngIf="filteredSession$ | async as session">
+<div class="session-container" *ngIf="filteredSession$ | async as session; else loading">
   <div class="session-header">
-    <h1>Session Code: {{ session.id }}</h1>
-    <button mat-raised-button color="warn" (click)="leaveSession()">Leave Session</button>
+    <div class="session-info">
+      <h1>Movie Night Session</h1>
+      <div class="session-code">
+        <span>Session Code: <strong>{{ session.id }}</strong></span>
+        <button mat-icon-button [cdkCopyToClipboard]="session.id" (cdkCopyToClipboardCopied)="onCopy()">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+    </div>
+    <button mat-stroked-button color="warn" (click)="leaveSession()">Leave Session</button>
   </div>
 
   <div class="session-content">
     <div class="members-container">
-      <h2>Members in Session</h2>
-      <mat-list>
-        <mat-list-item *ngFor="let memberId of session.members">
-          {{ memberId }}
-        </mat-list-item>
-      </mat-list>
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Session Members</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-list>
+            <mat-list-item *ngFor="let memberId of session.members">
+              <mat-icon matListItemIcon>person</mat-icon>
+              <div matListItemTitle>{{ memberId }}</div>
+            </mat-list-item>
+          </mat-list>
+        </mat-card-content>
+      </mat-card>
     </div>
 
     <div class="recommendations-container">
-      <h2>Common Recommendations</h2>
-      <div>
-        <mat-form-field>
+      <h2>Group Recommendations</h2>
+      <p>Movies you might all enjoy, based on everyone's watched lists.</p>
+
+      <div class="filter-controls">
+        <mat-form-field appearance="outline">
           <mat-label>Genre</mat-label>
           <mat-select [(ngModel)]="selectedGenre" (selectionChange)="applyFilters()">
-            <mat-option value="">All</mat-option>
+            <mat-option [value]="null">All Genres</mat-option>
             <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-label>Year</mat-label>
-        <mat-slider min="1990" max="2024" step="1">
-          <input matSliderThumb [(ngModel)]="selectedYear" (input)="applyFilters()">
-        </mat-slider>
+        <mat-form-field appearance="outline">
+          <mat-label>Year</mat-label>
+          <input matInput type="number" [(ngModel)]="selectedYear" (keyup.enter)="applyFilters()">
+        </mat-form-field>
 
-        <mat-label>Rating</mat-label>
-        <mat-slider min="1" max="10" step="0.1">
-          <input matSliderThumb [(ngModel)]="selectedRating" (input)="applyFilters()">
-        </mat-slider>
+        <mat-form-field appearance="outline">
+          <mat-label>Rating</mat-label>
+          <input matInput type="number" [(ngModel)]="selectedRating" (keyup.enter)="applyFilters()">
+        </mat-form-field>
       </div>
-      <mat-grid-list cols="3" rowHeight="400px" gutterSize="16px" *ngIf="session.recommendations?.length; else noRecommendations">
+
+      <mat-grid-list cols="3" rowHeight="400px" gutterSize="24px" *ngIf="session.recommendations?.length; else noRecommendations">
         <mat-grid-tile *ngFor="let movie of session.recommendations">
-          <mat-card class="movie-card">
-            <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }}">
-            <mat-card-header>
-              <mat-card-title>{{ movie.title }}</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <p>{{ movie.overview }}</p>
-            </mat-card-content>
-          </mat-card>
+          <app-movie-card [movie]="movie"></app-movie-card>
         </mat-grid-tile>
       </mat-grid-list>
       <ng-template #noRecommendations>
-        <p>No common recommendations found yet. Invite more friends!</p>
+        <p class="empty-list-message">No common recommendations found. Try adding more movies to your watched lists!</p>
       </ng-template>
     </div>
   </div>
 </div>
+
+<ng-template #loading>
+  <div class="loading-spinner">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+  </div>
+</ng-template>

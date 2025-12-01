@@ -1,5 +1,5 @@
 import { Injectable, inject, Injector } from '@angular/core';
-import { Firestore, collection, doc, getDoc, setDoc, deleteDoc, collectionData } from '@angular/fire/firestore';
+import { Firestore, collection, doc, getDoc, setDoc, deleteDoc, getDocs } from '@angular/fire/firestore';
 import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { User } from '../models/user.model';
@@ -37,7 +37,9 @@ export class UserService {
       switchMap(user => {
         if (user) {
           const watchedMoviesCollection = collection(doc(this.usersCollection, user.uid), 'watchedMovies');
-          return runInInjectionContext(this.injector, () => collectionData(watchedMoviesCollection, { idField: 'id' })) as Observable<Movie[]>;
+          return from(runInInjectionContext(this.injector, () => getDocs(watchedMoviesCollection))).pipe(
+            map(snapshot => snapshot.docs.map(doc => ({ id: parseInt(doc.id), ...doc.data() } as Movie)))
+          );
         } else {
           return of([]);
         }

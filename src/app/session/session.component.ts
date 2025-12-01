@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -11,9 +11,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ClipboardModule } from '@angular/cdk/clipboard';
 import { Session } from '../models/session.model';
 import { SessionService } from '../services/session.service';
 import { AuthService } from '../services/auth.service';
@@ -32,9 +29,7 @@ import { MovieService } from '../services/movie.service';
     MatListModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatSliderModule,
-    MatIconModule,
-    ClipboardModule
+    MatSliderModule
   ],
   templateUrl: './session.component.html',
   styleUrls: ['./session.component.css']
@@ -45,7 +40,6 @@ export class SessionComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   private sessionSubscription: Subscription | undefined;
   private sessionId: string | null = null;
-  private snackBar = inject(MatSnackBar);
 
   genres: { id: number, name: string }[] = [];
   selectedGenre: number | null = null;
@@ -121,9 +115,5 @@ export class SessionComponent implements OnInit, OnDestroy {
 
   leaveSession(): void {
     this.router.navigate(['/home']);
-  }
-
-  onCopy(): void {
-    this.snackBar.open('Session code copied to clipboard!', 'Close', { duration: 3000 });
   }
 }

@@ -1,38 +1,15 @@
-/* Global Styles */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+/* You can add global styles to this file, and also import other style files */
 
 html, body {
   height: 100%;
-  margin: 0;
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f0f2f5;
-  color: #333;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #f5f5f5;
 }
 
-.main-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-h1, h2, h3 {
-  font-weight: 500;
-}
-
-.mat-mdc-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: box-shadow 0.3s ease-in-out;
-}
-
-.mat-mdc-card:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.mat-mdc-raised-button.mat-primary {
-  background-color: #1a73e8;
-  color: #fff;
+main {
+  padding: 20px;
 }

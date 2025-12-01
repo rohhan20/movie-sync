@@ -1,43 +1,33 @@
-<div class="search-controls">
-  <mat-form-field appearance="outline" class="search-input">
-    <mat-label>Search for a movie...</mat-label>
-    <input matInput [(ngModel)]="searchQuery" (keyup.enter)="search()">
-    <button mat-icon-button matSuffix (click)="search()">
-      <mat-icon>search</mat-icon>
-    </button>
+<div>
+  <input type="text" [(ngModel)]="searchQuery" placeholder="Search for a movie...">
+  <button (click)="search()">Search</button>
+</div>
+
+<div>
+  <mat-form-field>
+    <mat-label>Genre</mat-label>
+    <mat-select [(ngModel)]="selectedGenre" (selectionChange)="search()">
+      <mat-option value="">All</mat-option>
+      <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
+    </mat-select>
   </mat-form-field>
 
-  <div class="filter-controls">
-    <mat-form-field appearance="outline">
-      <mat-label>Genre</mat-label>
-      <mat-select [(ngModel)]="selectedGenre" (selectionChange)="search()">
-        <mat-option [value]="null">All Genres</mat-option>
-        <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+  <mat-label>Year</mat-label>
+  <mat-slider min="1990" max="2024" step="1">
+    <input matSliderThumb [(ngModel)]="selectedYear" (input)="search()">
+  </mat-slider>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Year</mat-label>
-      <input matInput type="number" [(ngModel)]="selectedYear" (keyup.enter)="search()">
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Rating</mat-label>
-      <input matInput type="number" [(ngModel)]="selectedRating" (keyup.enter)="search()">
-    </mat-form-field>
-  </div>
+  <mat-label>Rating</mat-label>
+  <mat-slider min="1" max="10" step="0.1">
+    <input matSliderThumb [(ngModel)]="selectedRating" (input)="search()">
+  </mat-slider>
 </div>
 
-<div class="search-results" *ngIf="searchResults$ | async as movies; else loading">
-  <mat-grid-list cols="4" rowHeight="450px" gutterSize="24px">
-    <mat-grid-tile *ngFor="let movie of movies">
-      <app-movie-card [movie]="movie"></app-movie-card>
-    </mat-grid-tile>
-  </mat-grid-list>
-</div>
-
-<ng-template #loading>
-  <div class="loading-spinner">
-    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+<div *ngIf="searchResults$ | async as movies">
+  <div *ngFor="let movie of movies" class="movie-card">
+    <img [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }} poster">
+    <h3>{{ movie.title }}</h3>
+    <p>{{ movie.overview }}</p>
+    <button (click)="addToWatched(movie)">Add to Watched List</button>
   </div>
-</ng-template>
+</div>

@@ -9,6 +9,12 @@ import { map } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatIconModule } from '@angular/material/icon';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MovieCardComponent } from '../movie-card/movie-card.component';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-search',
@@ -18,7 +24,13 @@ import { MatSliderModule } from '@angular/material/slider';
     FormsModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatSliderModule
+    MatSliderModule,
+    MatIconModule,
+    MatGridListModule,
+    MatProgressSpinnerModule,
+    MovieCardComponent,
+    MatInputModule,
+    MatButtonModule
   ],
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.css']

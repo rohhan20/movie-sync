@@ -12,13 +12,15 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { Session } from '../models/session.model';
 import { SessionService } from '../services/session.service';
 import { AuthService } from '../services/auth.service';
 import { User } from '../models/user.model';
 import { MovieService } from '../services/movie.service';
+import { MovieCardComponent } from '../features/movie-card/movie-card.component';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-session',
@@ -34,7 +36,10 @@ import { MovieService } from '../services/movie.service';
     MatSelectModule,
     MatSliderModule,
     MatIconModule,
-    ClipboardModule
+    ClipboardModule,
+    MovieCardComponent,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
   ],
   templateUrl: './session.component.html',
   styleUrls: ['./session.component.css']

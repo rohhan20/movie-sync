@@ -33,6 +33,19 @@
         </mat-form-field>
 
         <button mat-raised-button color="primary" type="submit" [disabled]="signupForm.invalid">Sign Up</button>
+        
+        <div class="divider">
+          <span>OR</span>
+        </div>
+        
+        <button mat-raised-button color="accent" type="button" (click)="onGoogleSignIn()">
+          <mat-icon>account_circle</mat-icon>
+          Sign up with Google
+        </button>
+        
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
       </form>
     </mat-card-content>
   </mat-card>

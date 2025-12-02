@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInWithPopup, GoogleAuthProvider } from '@angular/fire/auth';
 import { BehaviorSubject, from, Observable } from 'rxjs';
 import { User } from '../models/user.model';
-import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -14,15 +14,26 @@ export class AuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
-    onAuthStateChanged(this.auth, (user) => {
+    onAuthStateChanged(this.auth, async (user) => {
       if (user) {
-        const a: User = {
-          uid: user.uid,
-          email: user.email!,
-          displayName: user.displayName || '',
-          watchedMovies: []
-        };
-        this.currentUserSubject.next(a);
+        // Try to get user data from Firestore, otherwise use auth data
+        const userDoc = doc(this.firestore, `users/${user.uid}`);
+        const userSnap = await getDoc(userDoc);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data() as User;
+          this.currentUserSubject.next(userData);
+        } else {
+          // Create user document if it doesn't exist
+          const newUser: User = {
+            uid: user.uid,
+            email: user.email!,
+            displayName: user.displayName || '',
+            watchedMovies: []
+          };
+          await setDoc(userDoc, newUser);
+          this.currentUserSubject.next(newUser);
+        }
       } else {
         this.currentUserSubject.next(null);
       }
@@ -30,7 +41,26 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<any> {
-    return from(signInWithEmailAndPassword(this.auth, email, password));
+    return from(signInWithEmailAndPassword(this.auth, email, password).then(() => ({ success: true })).catch(error => ({ success: false, error })));
+  }
+
+  signInWithGoogle(): Observable<any> {
+    const provider = new GoogleAuthProvider();
+    return from(signInWithPopup(this.auth, provider).then(async (result) => {
+      const user = result.user;
+      const userDoc = doc(this.firestore, `users/${user.uid}`);
+      const userSnap = await getDoc(userDoc);
+      
+      if (!userSnap.exists()) {
+        await setDoc(userDoc, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || '',
+          watchedMovies: []
+        });
+      }
+      return { success: true };
+    }).catch(error => ({ success: false, error })));
   }
 
   signup(name: string, email: string, password: string): Observable<void> {

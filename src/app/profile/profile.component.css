@@ -1,26 +1,32 @@
 .profile-container {
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .profile-card,
 .watched-list-card,
 .recommendations-card {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  margin-bottom: 20px;
 }
 
 .recommendations-card .movie-card {
   width: 100%;
   text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.recommendations-card .movie-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .recommendations-card .movie-card img {
-  height: 250px;
+  height: 300px;
   object-fit: cover;
+  width: 100%;
 }
 
 .recommendations-card .movie-card mat-card-title {
@@ -29,19 +35,75 @@
   line-height: 1.2;
 }
 
-.search-field {
-  width: 100%;
+.filters-section {
+  display: flex;
+  gap: 20px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 8px;
+  align-items: flex-end;
+}
+
+.filters-section mat-form-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.rating-filter {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rating-label {
+  font-size: 0.875rem;
+  color: rgba(0,0,0,0.6);
+  font-weight: 500;
+}
+
+.rating-filter mat-slider {
+  width: 100%;
 }
 
 mat-list-item {
   margin-bottom: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+mat-list-item:last-child {
+  border-bottom: none;
 }
 
 mat-list-item span[matListItemTitle] {
   font-weight: 500;
+  font-size: 1rem;
 }
 
 mat-list-item span[matListItemLine] {
-  color: rgba(0, 0, 0, 0.54);
+  color: rgba(0,0,0,0.6);
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: rgba(0,0,0,0.6);
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+  color: rgba(0,0,0,0.4);
+}
+
+@media (max-width: 768px) {
+  .filters-section {
+    flex-direction: column;
+  }
 }

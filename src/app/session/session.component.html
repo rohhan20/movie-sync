@@ -1,56 +1,141 @@
-<div class="session-container" *ngIf="filteredSession$ | async as session">
-  <div class="session-header">
-    <h1>Session Code: {{ session.id }}</h1>
-    <button mat-raised-button color="warn" (click)="leaveSession()">Leave Session</button>
+<div class="session-container">
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading session...</p>
   </div>
 
-  <div class="session-content">
-    <div class="members-container">
-      <h2>Members in Session</h2>
-      <mat-list>
-        <mat-list-item *ngFor="let memberId of session.members">
-          {{ memberId }}
-        </mat-list-item>
-      </mat-list>
-    </div>
-
-    <div class="recommendations-container">
-      <h2>Common Recommendations</h2>
-      <div>
-        <mat-form-field>
-          <mat-label>Genre</mat-label>
-          <mat-select [(ngModel)]="selectedGenre" (selectionChange)="applyFilters()">
-            <mat-option value="">All</mat-option>
-            <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-label>Year</mat-label>
-        <mat-slider min="1990" max="2024" step="1">
-          <input matSliderThumb [(ngModel)]="selectedYear" (input)="applyFilters()">
-        </mat-slider>
-
-        <mat-label>Rating</mat-label>
-        <mat-slider min="1" max="10" step="0.1">
-          <input matSliderThumb [(ngModel)]="selectedRating" (input)="applyFilters()">
-        </mat-slider>
+  <div *ngIf="filteredSession$ | async as session; else noSession" class="session-content-wrapper">
+    <div class="session-header">
+      <div class="session-code-section">
+        <h1>Session Code</h1>
+        <button mat-raised-button (click)="copySessionCode()" class="session-code-button">
+          <mat-icon>content_copy</mat-icon>
+          {{ session.id }}
+        </button>
+        <p class="session-code-hint">Click to copy</p>
       </div>
-      <mat-grid-list cols="3" rowHeight="400px" gutterSize="16px" *ngIf="session.recommendations?.length; else noRecommendations">
-        <mat-grid-tile *ngFor="let movie of session.recommendations">
-          <mat-card class="movie-card">
-            <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }}">
-            <mat-card-header>
-              <mat-card-title>{{ movie.title }}</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <p>{{ movie.overview }}</p>
-            </mat-card-content>
-          </mat-card>
-        </mat-grid-tile>
-      </mat-grid-list>
-      <ng-template #noRecommendations>
-        <p>No common recommendations found yet. Invite more friends!</p>
-      </ng-template>
+      <button mat-raised-button color="warn" (click)="leaveSession()">
+        <mat-icon>exit_to_app</mat-icon>
+        Leave Session
+      </button>
+    </div>
+
+    <div class="session-content">
+      <div class="members-container">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Members in Session ({{ session.members.length }})</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="members-list" *ngIf="members$ | async as members">
+              <span *ngFor="let member of members" class="member-badge">
+                {{ member.name }}
+              </span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="recommendations-container">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Common Recommendations</mat-card-title>
+            <mat-card-subtitle>Movies that no one in the group has watched</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="filters-section">
+              <mat-form-field>
+                <mat-label>Genre</mat-label>
+                <mat-select [(ngModel)]="selectedGenre" (selectionChange)="applyFilters()">
+                  <mat-option [value]="null">All Genres</mat-option>
+                  <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field>
+                <mat-label>Year</mat-label>
+                <input matInput type="number" [(ngModel)]="selectedYear" (ngModelChange)="applyFilters()" placeholder="Any year" min="1990" max="2024">
+              </mat-form-field>
+
+              <div class="rating-filter">
+                <label class="rating-label">Min Rating: <span *ngIf="selectedRating">{{ selectedRating }}+</span><span *ngIf="!selectedRating">Any</span></label>
+                <mat-slider min="0" max="10" step="0.5" discrete>
+                  <input matSliderThumb [(ngModel)]="selectedRating" (valueChange)="applyFilters()">
+                </mat-slider>
+              </div>
+            </div>
+
+            <div *ngIf="session.selectedMovie" class="selected-movie-section">
+              <mat-card class="selected-movie-card">
+                <mat-card-header>
+                  <mat-card-title>Selected Movie</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="selected-movie-content">
+                    <img [src]="'https://image.tmdb.org/t/p/w200' + session.selectedMovie.poster_path" 
+                         [alt]="session.selectedMovie.title"
+                         (error)="handleImageError($event)"
+                         class="selected-movie-poster">
+                    <div class="selected-movie-info">
+                      <h3>{{ session.selectedMovie.title }}</h3>
+                      <p>{{ session.selectedMovie.release_date | date:'yyyy' }} • ⭐ {{ session.selectedMovie.vote_average | number:'1.1-1' }}</p>
+                      <button mat-raised-button color="primary" (click)="viewMovieDetails(session.selectedMovie!)">
+                        <mat-icon>info</mat-icon>
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <div *ngIf="session.recommendations?.length; else noRecommendations" class="movies-grid">
+              <h3>Recommendations</h3>
+              <mat-grid-list cols="3" rowHeight="500px" gutterSize="16px">
+                <mat-grid-tile *ngFor="let movie of session.recommendations">
+                  <mat-card class="movie-card" (click)="viewMovieDetails(movie)">
+                    <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" 
+                         [alt]="movie.title + ' poster'"
+                         (error)="handleImageError($event)">
+                    <mat-card-header>
+                      <mat-card-title>{{ movie.title }}</mat-card-title>
+                      <mat-card-subtitle>{{ movie.release_date | date:'yyyy' }} • ⭐ {{ movie.vote_average | number:'1.1-1' }}</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p class="movie-overview">{{ movie.overview | slice:0:150 }}{{ movie.overview.length > 150 ? '...' : '' }}</p>
+                    </mat-card-content>
+                    <mat-card-actions>
+                      <button mat-raised-button color="primary" (click)="selectMovie(movie); $event.stopPropagation()">
+                        <mat-icon>check_circle</mat-icon>
+                        Select This Movie
+                      </button>
+                      <button mat-button (click)="viewMovieDetails(movie); $event.stopPropagation()">
+                        <mat-icon>info</mat-icon>
+                        View Details
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+                </mat-grid-tile>
+              </mat-grid-list>
+            </div>
+            <ng-template #noRecommendations>
+              <div class="no-recommendations">
+                <mat-icon>movie_filter</mat-icon>
+                <p>No common recommendations found yet. Invite more friends to join!</p>
+              </div>
+            </ng-template>
+          </mat-card-content>
+        </mat-card>
+      </div>
     </div>
   </div>
+
+  <ng-template #noSession>
+    <div class="no-session">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Session not found</h2>
+      <p>The session you're looking for doesn't exist or has been deleted.</p>
+      <button mat-raised-button color="primary" (click)="leaveSession()">Go Home</button>
+    </div>
+  </ng-template>
 </div>

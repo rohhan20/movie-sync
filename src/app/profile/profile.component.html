@@ -12,13 +12,27 @@
     </mat-card-header>
     <mat-card-content>
       <mat-list *ngIf="watchedMovies$ | async as watchedMovies">
-        <mat-list-item *ngFor="let movie of watchedMovies">
-          <span matListItemTitle>{{ movie.title }}</span>
-          <span matListItemLine>{{ movie.overview }}</span>
-          <button mat-icon-button (click)="removeMovieFromWatched(movie.id)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-list-item>
+        <div *ngIf="watchedMovies.length > 0; else emptyWatched">
+          <mat-list-item *ngFor="let movie of watchedMovies">
+            <img matListItemAvatar [src]="'https://image.tmdb.org/t/p/w92' + movie.poster_path" 
+                 [alt]="movie.title"
+                 (error)="handleImageError($event)">
+            <span matListItemTitle>{{ movie.title }}</span>
+            <span matListItemLine>{{ movie.overview | slice:0:100 }}{{ movie.overview.length > 100 ? '...' : '' }}</span>
+            <span matListItemLine style="font-size: 0.85rem; color: rgba(0,0,0,0.6);">
+              {{ movie.release_date | date:'yyyy' }} • ⭐ {{ movie.vote_average | number:'1.1-1' }}
+            </span>
+            <button mat-icon-button color="warn" (click)="removeMovieFromWatched(movie.id)" matListItemMeta>
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-list-item>
+        </div>
+        <ng-template #emptyWatched>
+          <div class="empty-state">
+            <mat-icon>movie</mat-icon>
+            <p>Your watched list is empty. Start adding movies!</p>
+          </div>
+        </ng-template>
       </mat-list>
     </mat-card-content>
   </mat-card>
@@ -32,25 +46,29 @@
         <mat-form-field>
           <mat-label>Genre</mat-label>
           <mat-select [(ngModel)]="selectedGenre" (selectionChange)="applyFilters()">
-            <mat-option value="">All</mat-option>
+            <mat-option [value]="null">All Genres</mat-option>
             <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
           </mat-select>
         </mat-form-field>
 
-        <mat-label>Year</mat-label>
-        <mat-slider min="1990" max="2024" step="1">
-          <input matSliderThumb [(ngModel)]="selectedYear" (input)="applyFilters()">
-        </mat-slider>
+        <mat-form-field>
+          <mat-label>Year</mat-label>
+          <input matInput type="number" [(ngModel)]="selectedYear" (ngModelChange)="applyFilters()" placeholder="Any year" min="1990" max="2024">
+        </mat-form-field>
 
-        <mat-label>Rating</mat-label>
-        <mat-slider min="1" max="10" step="0.1">
-          <input matSliderThumb [(ngModel)]="selectedRating" (input)="applyFilters()">
-        </mat-slider>
+        <div class="rating-filter">
+          <label class="rating-label">Min Rating: <span *ngIf="selectedRating">{{ selectedRating }}+</span><span *ngIf="!selectedRating">Any</span></label>
+          <mat-slider min="0" max="10" step="0.5" discrete>
+            <input matSliderThumb [(ngModel)]="selectedRating" (valueChange)="applyFilters()">
+          </mat-slider>
+        </div>
       </div>
       <mat-grid-list cols="3" rowHeight="350px" gutterSize="16px">
         <mat-grid-tile *ngFor="let movie of recommendations$ | async">
-          <mat-card class="movie-card">
-            <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }}">
+          <mat-card class="movie-card" (click)="viewMovieDetails(movie)">
+            <img mat-card-image [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" 
+                 [alt]="movie.title"
+                 (error)="handleImageError($event)">
             <mat-card-content>
               <mat-card-title>{{ movie.title }}</mat-card-title>
             </mat-card-content>

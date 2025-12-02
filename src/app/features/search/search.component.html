@@ -1,33 +1,71 @@
-<div>
-  <input type="text" [(ngModel)]="searchQuery" placeholder="Search for a movie...">
-  <button (click)="search()">Search</button>
-</div>
-
-<div>
-  <mat-form-field>
-    <mat-label>Genre</mat-label>
-    <mat-select [(ngModel)]="selectedGenre" (selectionChange)="search()">
-      <mat-option value="">All</mat-option>
-      <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-label>Year</mat-label>
-  <mat-slider min="1990" max="2024" step="1">
-    <input matSliderThumb [(ngModel)]="selectedYear" (input)="search()">
-  </mat-slider>
-
-  <mat-label>Rating</mat-label>
-  <mat-slider min="1" max="10" step="0.1">
-    <input matSliderThumb [(ngModel)]="selectedRating" (input)="search()">
-  </mat-slider>
-</div>
-
-<div *ngIf="searchResults$ | async as movies">
-  <div *ngFor="let movie of movies" class="movie-card">
-    <img [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" alt="{{ movie.title }} poster">
-    <h3>{{ movie.title }}</h3>
-    <p>{{ movie.overview }}</p>
-    <button (click)="addToWatched(movie)">Add to Watched List</button>
+<div class="search-container">
+  <div class="search-header">
+    <h2>Search Movies</h2>
+    <p>Find movies to add to your watched list</p>
   </div>
+
+  <div class="search-form">
+    <mat-form-field appearance="outline" style="flex: 1;">
+      <mat-label>Search for a movie...</mat-label>
+      <input matInput [(ngModel)]="searchQuery" (keyup.enter)="search()" placeholder="Enter movie title">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="search()" [disabled]="!searchQuery.trim()">
+      <mat-icon>search</mat-icon>
+      Search
+    </button>
+  </div>
+
+  <div class="filters-section">
+    <mat-form-field appearance="outline">
+      <mat-label>Genre</mat-label>
+      <mat-select [(ngModel)]="selectedGenre" (selectionChange)="search()">
+        <mat-option [value]="null">All Genres</mat-option>
+        <mat-option *ngFor="let genre of genres" [value]="genre.id">{{ genre.name }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Year</mat-label>
+      <input matInput type="number" [(ngModel)]="selectedYear" (ngModelChange)="search()" placeholder="Any year" min="1990" max="2024">
+    </mat-form-field>
+
+    <div class="rating-filter">
+      <label class="rating-label">Min Rating: <span *ngIf="selectedRating">{{ selectedRating }}+</span><span *ngIf="!selectedRating">Any</span></label>
+      <mat-slider min="0" max="10" step="0.5" discrete>
+        <input matSliderThumb [(ngModel)]="selectedRating" (valueChange)="search()">
+      </mat-slider>
+    </div>
+  </div>
+
+  <div *ngIf="searchResults$ | async as movies; else noResults">
+    <div *ngIf="movies.length > 0; else noResults">
+      <h3>Search Results ({{ movies.length }})</h3>
+      <div class="search-results">
+        <div *ngFor="let movie of movies" class="movie-card" (click)="viewMovieDetails(movie)">
+          <img [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" 
+               [alt]="movie.title + ' poster'"
+               (error)="handleImageError($event)">
+          <div class="movie-card-content">
+            <h3>{{ movie.title }}</h3>
+            <p>{{ movie.overview }}</p>
+            <p style="font-size: 0.85rem; color: rgba(0,0,0,0.6); margin-bottom: 10px;">
+              {{ movie.release_date | date:'yyyy' }} • ⭐ {{ movie.vote_average | number:'1.1-1' }}
+            </p>
+            <button mat-raised-button color="primary" (click)="addToWatched(movie); $event.stopPropagation()">
+              <mat-icon>add</mat-icon>
+              Add to Watched List
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noResults>
+    <div class="no-results">
+      <mat-icon>movie_filter</mat-icon>
+      <p>No movies found. Try a different search term or adjust your filters.</p>
+    </div>
+  </ng-template>
 </div>

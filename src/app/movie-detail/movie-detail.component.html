@@ -1,0 +1,58 @@
+<div class="movie-detail-container" *ngIf="movie$ | async as movie; else loading">
+  <button mat-icon-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Back
+  </button>
+
+  <div class="movie-detail-content">
+    <div class="poster-section">
+      <img [src]="'https://image.tmdb.org/t/p/w500' + movie.poster_path" 
+           [alt]="movie.title + ' poster'"
+           (error)="handleImageError($event)"
+           class="movie-poster">
+    </div>
+
+    <div class="info-section">
+      <h1>{{ movie.title }}</h1>
+      
+      <div class="movie-meta">
+        <span class="release-date">{{ movie.release_date | date:'MMMM d, yyyy' }}</span>
+        <span class="rating">⭐ {{ movie.vote_average | number:'1.1-1' }}/10</span>
+      </div>
+
+      <div class="genres" *ngIf="movieGenres.length > 0">
+        <span class="genre-chip" *ngFor="let genre of movieGenres">{{ genre }}</span>
+      </div>
+
+      <div class="overview">
+        <h2>Overview</h2>
+        <p>{{ movie.overview || 'No overview available.' }}</p>
+      </div>
+
+      <div class="actions">
+        <button *ngIf="!isInWatchedList" 
+                mat-raised-button 
+                color="primary" 
+                (click)="addToWatched(movie)">
+          <mat-icon>add</mat-icon>
+          Add to Watched List
+        </button>
+        <button *ngIf="isInWatchedList" 
+                mat-raised-button 
+                color="warn" 
+                (click)="removeFromWatched(movie.id)">
+          <mat-icon>remove</mat-icon>
+          Remove from Watched List
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading movie details...</p>
+  </div>
+</ng-template>
+

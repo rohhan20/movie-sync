@@ -59,8 +59,37 @@ export class SessionService {
     });
   }
 
+  selectMovie(sessionId: string, movie: Movie): Observable<void> {
+    const sessionDoc = doc(this.sessionsCollection, sessionId);
+    return from(updateDoc(sessionDoc, { selectedMovie: movie }));
+  }
+
+  addSelectedMovieToAllMembers(sessionId: string): Observable<void> {
+    return this.getSession(sessionId).pipe(
+      switchMap(session => {
+        if (!session || !session.selectedMovie) {
+          return of(undefined);
+        }
+
+        const addMovieObservables = session.members.map(memberId =>
+          this.userService.addToWatched(session.selectedMovie!)
+        );
+
+        return combineLatest(addMovieObservables).pipe(
+          map(() => undefined)
+        );
+      })
+    ) as Observable<void>;
+  }
+
   private updateRecommendations(session: Session): Observable<Session> {
-    const memberWatchedMovies$ = session.members.map(memberId => this.userService.getWatchedMovies());
+    if (session.members.length === 0) {
+      return of({ ...session, recommendations: [] });
+    }
+
+    const memberWatchedMovies$ = session.members.map(memberId => 
+      this.userService.getWatchedMovies(memberId)
+    );
 
     return combineLatest(memberWatchedMovies$).pipe(
       switchMap(watchedMoviesByMember => {
@@ -69,10 +98,11 @@ export class SessionService {
 
         return this.movieService.getRecommendations(session.members, {}, uniqueWatchedMovieIds);
       }),
-      map(recommendations => {
+      switchMap(recommendations => {
         const sessionDoc = doc(this.sessionsCollection, session.id);
-        updateDoc(sessionDoc, { recommendations });
-        return { ...session, recommendations };
+        return from(updateDoc(sessionDoc, { recommendations })).pipe(
+          map(() => ({ ...session, recommendations }))
+        );
       })
     );
   }

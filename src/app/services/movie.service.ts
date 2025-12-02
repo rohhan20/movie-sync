@@ -74,4 +74,9 @@ export class MovieService {
       map(response => response.genres)
     );
   }
+
+  getMovieById(movieId: number): Observable<Movie> {
+    const params = this.getBaseParams();
+    return this.http.get<Movie>(`${this.apiUrl}/movie/${movieId}`, { params });
+  }
 }

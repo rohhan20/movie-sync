@@ -12,7 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
-
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { User } from '../models/user.model';
 import { Movie } from '../models/movie.model';
 import { UserService } from '../services/user.service';
@@ -33,7 +34,9 @@ import { MovieService } from '../services/movie.service';
     MatIconModule,
     MatGridListModule,
     MatSelectModule,
-    MatSliderModule
+    MatSliderModule,
+    MatIconModule,
+    MatSnackBarModule
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
@@ -51,7 +54,9 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private movieService: MovieService
+    private movieService: MovieService,
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {
     this.user$ = this.userService.getUserProfile();
     this.watchedMovies$ = this.userService.getWatchedMovies();
@@ -86,6 +91,26 @@ export class ProfileComponent implements OnInit {
   }
 
   removeMovieFromWatched(movieId: number): void {
-    this.userService.removeFromWatched(movieId.toString()).subscribe();
+    this.userService.removeFromWatched(movieId).subscribe({
+      next: () => {
+        this.snackBar.open('Movie removed from watched list', 'Close', { duration: 3000 });
+      },
+      error: (error) => {
+        this.snackBar.open('Failed to remove movie', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  handleImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.src = 'https://via.placeholder.com/500x750?text=No+Image';
+    }
+  }
+
+  viewMovieDetails(movie: Movie): void {
+    this.router.navigate(['/movie', movie.id], {
+      state: { movie }
+    });
   }
 }

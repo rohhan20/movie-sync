@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../services/auth.service';
 import { SessionService } from '../services/session.service';
 import { SearchComponent } from '../features/search/search.component';
@@ -25,6 +26,8 @@ import { Observable } from 'rxjs';
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
+    MatSnackBarModule,
+    RouterLink,
     SearchComponent
   ],
   templateUrl: './home.component.html',
@@ -35,17 +38,28 @@ export class HomeComponent {
 
   joinCode: string = '';
 
-  constructor(private router: Router, private sessionService: SessionService, private authService: AuthService) {}
+  constructor(
+    private router: Router, 
+    private sessionService: SessionService, 
+    private authService: AuthService,
+    private snackBar: MatSnackBar
+  ) {}
 
   createSession(): void {
     this.authService.currentUser$.pipe(take(1)).subscribe(user => {
       if (user) {
-        this.sessionService.createSession(user.uid).subscribe(sessionId => {
-          this.router.navigate(['/session', sessionId]);
+        this.sessionService.createSession(user.uid).subscribe({
+          next: (sessionId) => {
+            this.snackBar.open('Session created successfully!', 'Close', { duration: 3000 });
+            this.router.navigate(['/session', sessionId]);
+          },
+          error: (error) => {
+            this.snackBar.open('Failed to create session', 'Close', { duration: 5000 });
+          }
         });
       } else {
-        // Handle case where user is not logged in
-        console.error('User not logged in, cannot create session.');
+        this.snackBar.open('Please log in to create a session', 'Close', { duration: 5000 });
+        this.router.navigate(['/login']);
       }
     });
   }
@@ -53,6 +67,8 @@ export class HomeComponent {
   joinSession(): void {
     if (this.joinCode.trim()) {
       this.router.navigate(['/session', this.joinCode.trim()]);
+    } else {
+      this.snackBar.open('Please enter a session code', 'Close', { duration: 3000 });
     }
   }
 }

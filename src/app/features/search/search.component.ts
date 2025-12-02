@@ -9,6 +9,12 @@ import { map } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-search',
@@ -18,7 +24,12 @@ import { MatSliderModule } from '@angular/material/slider';
     FormsModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatSliderModule
+    MatSliderModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatSnackBarModule
   ],
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.css']
@@ -33,7 +44,12 @@ export class SearchComponent implements OnInit {
   selectedYear: number | null = null;
   selectedRating: number | null = null;
 
-  constructor(private movieService: MovieService, private userService: UserService) { }
+  constructor(
+    private movieService: MovieService, 
+    private userService: UserService,
+    private snackBar: MatSnackBar,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.userService.getWatchedMovies().pipe(
@@ -53,8 +69,30 @@ export class SearchComponent implements OnInit {
   }
 
   addToWatched(movie: Movie): void {
-    this.userService.addToWatched(movie).subscribe(() => {
-      console.log(`Added ${movie.title} to watched list.`);
+    this.userService.addToWatched(movie).subscribe({
+      next: () => {
+        this.snackBar.open(`Added "${movie.title}" to your watched list!`, 'Close', { duration: 3000 });
+        // Remove from search results
+        this.searchResults$ = this.searchResults$.pipe(
+          map(movies => movies.filter(m => m.id !== movie.id))
+        );
+      },
+      error: (error) => {
+        this.snackBar.open('Failed to add movie to watched list', 'Close', { duration: 5000 });
+      }
+    });
+  }
+
+  handleImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.src = 'https://via.placeholder.com/500x750?text=No+Image';
+    }
+  }
+
+  viewMovieDetails(movie: Movie): void {
+    this.router.navigate(['/movie', movie.id], {
+      state: { movie }
     });
   }
 }

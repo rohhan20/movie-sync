@@ -4,4 +4,5 @@ export interface Session {
   id: string;
   members: string[];
   recommendations: Movie[];
+  selectedMovie?: Movie | null;
 }
